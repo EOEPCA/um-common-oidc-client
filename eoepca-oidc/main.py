@@ -3,9 +3,12 @@
 # *** Use this for auto-contained examples ***
 from OpenIDClient import OpenIDClient
 def main():
-    a = OpenIDClient()
+    
+    a = OpenIDClient(None,'openid%20profile%20email',None,None,'kbyuFDidLLm280LIwVFiazOqjO3ty8KH')
     a.testLib()
-    pass
+    a.requestCodeAuth('GET')
+    print('stoppp')
+    
 
 if __name__ == "__main__":
     main()

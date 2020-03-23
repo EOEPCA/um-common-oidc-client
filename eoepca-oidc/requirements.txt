@@ -1,2 +1,5 @@
 # EXAMPLE REQUIREMENTS - PLEASE REPLACE WITH REAL ONES
 # Remember to update setup.py
+
+#Python library for HTTP requests from Client side
+requests
