@@ -21,39 +21,38 @@ class OpenIDClient:
         return bool(self._token)
 
 
-    def requestCodeAuth(self, method):
+    def requestCodeAuth(self, issuer, method):
         '''
         The logic implemented on this webpage should retrieve the token from the URL
         '''
-        uri_list = self.getDiscoveryUrl()
-        if method == 'GET':
-            self.getRequestCode(uri_list)
-        elif method == 'POST':
-            self.postRequestToken(uri_list,self.code)
-        else:
-            print(method)
+        uri_list = self.getDiscoveryUrl(issuer)
+        print(uri_list)
+        
+        # if method == 'GET':
+        #     self.getRequestCode(uri_list)
+        # elif method == 'POST':
+        #     self.postRequestToken(uri_list,self.code)
+        # else:
+        #     print(method)
 
-    def getDiscoveryUrl(self):
-        q = []
-        file = open('./../well_known/openid-configuration','r')
-        for f in file:
-            response=requests.get(str(f))
-            response.encoding = 'utf-8'
-            for line , v in response.json().items():
-                q.append(v)
-            return q
+    def getDiscoveryUrl(self, sso_node):
+        q = {}
+        response=requests.get(str(sso_node)+'/.well_known/openid-configuration', verify = './../mySecureKey.pem')
+        response.encoding = 'utf-8'
+        print(response.json())
+        for k , v in response.json().items():
+            q[k]=v
+
+        return q
        
 
     def getRequestCode(self, uri_list):
-        #print(uri_list)
         for url in uri_list:
             #/oxauth/restv1/authorize
             provider_config={"authorization_endpoint":"/oxauth/restv1/authorize", "scope": self.scope,"response_type": self.response_type, "client_id": self.client_id,"redirect_uri": 'app://test'}
             try:
                 response=requests.get(str(url), provider_config)
                 response.encoding = 'utf-8'
-                # for line , v in response.json().items():
-                #     print(line,v)
                 print(response.headers['Content-Type'])
                 print('---------------------------------------')
                 response.raise_for_status()
@@ -103,9 +102,9 @@ class OpenIDClient:
     def client_secret(self): 
         return self._client_secret
 
-    @client_id.setter 
-    def client_id(self, a): 
-        self._client_id = a 
+    @client_secret.setter 
+    def client_secret(self, a): 
+        self._client_secret = a 
   
     @property
     def code(self): 
