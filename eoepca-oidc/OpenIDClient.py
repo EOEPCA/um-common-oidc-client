@@ -1,11 +1,11 @@
 import requests
 from requests.exceptions import HTTPError
- 
+
 class OpenIDClient:
     def __init__(self, scope = None, acces_token = None, response_type=None, client_id=None, redirect_uri=None):
     
         self.token =acces_token
-        self.scope = 'openid%20profile%20email'
+        self.scope = scope
         self.redirect_uri = redirect_uri
         self._client_id = client_id
         self.response_type = 'code'
@@ -25,36 +25,66 @@ class OpenIDClient:
         '''
         The logic implemented on this webpage should retrieve the token from the URL
         '''
-        uri_list = self.getDiscoveryUrl(issuer)
-        print(uri_list)
-        
-        # if method == 'GET':
-        #     self.getRequestCode(uri_list)
-        # elif method == 'POST':
-        #     self.postRequestToken(uri_list,self.code)
-        # else:
-        #     print(method)
+        try:
+            uri_dict, scope_list = self.getDiscoveryUrl(issuer)
 
+            if method == 'GET':
+                self.getRequestCode(uri_dict)
+            elif method == 'POST':
+                self.postRequestToken(uri_dict,self.code)
+            else:
+                print(method)
+        except Exception as err:
+            print('Other error occurred: '+ str({err}))
+        else:
+            print('Success!')
+            
     def getDiscoveryUrl(self, sso_node):
         q = {}
-        response=requests.get(str(sso_node)+'/.well_known/openid-configuration', verify = './../mySecureKey.pem')
+        response=requests.get(str(sso_node)+'/.well_known/openid-configuration')
         response.encoding = 'utf-8'
-        print(response.json())
+        scope_list=[]
+        url_list=[]
+        
         for k , v in response.json().items():
-            q[k]=v
-
-        return q
-       
+            if "scopes_supported" in k:
+                scope_list=v
+            elif "endpoint" in k:
+                q[k]=v
+            else:
+                continue
+        return q, scope_list
 
     def getRequestCode(self, uri_list):
-        for url in uri_list:
-            #/oxauth/restv1/authorize
-            provider_config={"authorization_endpoint":"/oxauth/restv1/authorize", "scope": self.scope,"response_type": self.response_type, "client_id": self.client_id,"redirect_uri": 'app://test'}
+        provider_config={"scope": self.scope,"response_type": self.response_type, "client_id": self.client_id,"redirect_uri": self.redirect_uri}
+        try:
+            response=requests.get(uri_list["authorization_endpoint"], provider_config)
+            response.encoding = 'utf-8'
+            response.raise_for_status()
+            self._code = self.retrieveCode(response.text())
+        except HTTPError as http_error_msg:
+            print('HTTP error occurred: ' + str({http_error_msg}))
+        except Exception as err:
+            print('Other error occurred: '+ str({err}))
+        else:
+            print('Success!')
+
+    def retrieveCode(response):
+        code = response.split('code=')[-1].split('&')
+        return code[0]
+
+    def retrieveCodeResponse(self, response):
+        code = response.split('code=')[-1]
+        print(code)
+
+    def postRequestToken(self,uri_list, code):
+     
+        provider_config={"grant_type": 'authorization_code', "code": self._code, "redirect_uri": self.redirect_uri, "scope": self.scope}
+        if self.client_id and self.client_secret:
+            client_config = {"client_id": self.client_id, "client_secret": self.client_secret}
             try:
-                response=requests.get(str(url), provider_config)
+                response = requests.post(uri_list["token_endpoint"], provider_config, client_config)
                 response.encoding = 'utf-8'
-                print(response.headers['Content-Type'])
-                print('---------------------------------------')
                 response.raise_for_status()
             except HTTPError as http_error_msg:
                 print('HTTP error occurred: ' + str({http_error_msg}))
@@ -62,29 +92,6 @@ class OpenIDClient:
                 print('Other error occurred: '+ str({err}))
             else:
                 print('Success!')
-
-
-    def postRequestToken(self,uri_list, code):
-      
-        for url in uri_list:
-            provider_config={"token_endpoint":"/oxauth/restv1/token", "grant_type": 'authorization_code', "code": self._code, "redirect_uri": 'app://test', "scope": self.scope}
-            if self.client_id and self.client_secret:
-                client_config = {"client_id": self.client_id, "client_secret": self.client_secret}
-                try:
-                    response = requests.post(url, provider_config, client_config)
-                    response.encoding = 'utf-8'
-                    print(response.text)
-                    print(response.json())
-                    print('---------------------------------------')
-                    print(response.headers['Content-Type'])
-                    print('---------------------------------------')
-                    response.raise_for_status()
-                except HTTPError as http_error_msg:
-                    print('HTTP error occurred: ' + str({http_error_msg}))
-                except Exception as err:
-                    print('Other error occurred: '+ str({err}))
-                else:
-                    print('Success!')
         
 
     def testLib(self):
