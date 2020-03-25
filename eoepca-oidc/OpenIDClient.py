@@ -1,8 +1,8 @@
+
 import requests
 from requests.exceptions import HTTPError
-
 class OpenIDClient:
-    def __init__(self, scope = None, acces_token = None, response_type=None, client_id=None, redirect_uri=None):
+    def __init__(self, issuer = None, scope = None, acces_token = None, response_type=None, client_id=None, redirect_uri=None):
     
         self.token =acces_token
         self.scope = scope
@@ -11,8 +11,10 @@ class OpenIDClient:
         self.response_type = 'code'
         self._client_secret = None
         self._code = None
-        self._token = None
+        self._token = acces_token
         self.method = 'GET'
+        self.issuer = issuer
+        self.state = None
  
     def authorized(self):
         '''
@@ -20,27 +22,43 @@ class OpenIDClient:
         '''
         return bool(self._token)
 
+    def supportedScopes(self, supportedScopes):
+        '''
+        Method that returns error in case the scopes provided by the RP doesn't satisfy the host's supported scopes.
+        '''
+        if 'openid' in self.scopes and 'ogc_user' in self.scopes:
+            for i in self.scope:
+                if i in supportedScopes:
+                    continue
+                else:
+                    self.scope.remove(i)
+        else:
+            raise Exception('Scope error, could not find the required scopes for OIDC Connect auth')
 
-    def requestCodeAuth(self, issuer, method):
+    def requestAuth(self, method, issuer):
         '''
         The logic implemented on this webpage should retrieve the token from the URL
         '''
         try:
-            uri_dict, scope_list = self.getDiscoveryUrl(issuer)
+            uri_dict_supported, scope_list_supported = self.getDiscoveryUrl(issuer)
 
             if method == 'GET':
                 self.getRequestCode(uri_dict)
             elif method == 'POST':
-                self.postRequestToken(uri_dict,self.code)
+                self.postRequestToken(uri_dict)
             else:
-                print(method)
+                raise Exception('The request must have a method defined')
         except Exception as err:
-            print('Other error occurred: '+ str({err}))
-        else:
-            print('Success!')
+            raise Exception('Other error occurred: '+ str({err}))
             
     def getDiscoveryUrl(self, sso_node):
-        q = {}
+        '''
+        Method that retrieves information from the openid configuration of the host by GET method. It is used to verify the scopes and endpoint inputs
+        Returns 
+            <List>scope_list: List of all supported scopes by the host
+            <Dict>url_dict: Dictionary with all host endpoints 
+        '''
+        url_dict = {}
         response=requests.get(str(sso_node)+'/.well_known/openid-configuration')
         response.encoding = 'utf-8'
         scope_list=[]
@@ -49,51 +67,93 @@ class OpenIDClient:
         for k , v in response.json().items():
             if "scopes_supported" in k:
                 scope_list=v
-            elif "endpoint" in k:
-                q[k]=v
+            elif "endpoint" in k[-8:]:
+                url_dict[k]=v
+            elif "issuer" in k:
+                url_dict[k]=v
             else:
                 continue
-        return q, scope_list
+        return url_dict, scope_list
 
     def getRequestCode(self, uri_list):
-        provider_config={"scope": self.scope,"response_type": self.response_type, "client_id": self.client_id,"redirect_uri": self.redirect_uri}
+        '''
+        Method that retrieves information from the authorization endpoint in order to retrieve the authorization code   
+        '''
+        provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
         try:
-            response=requests.get(uri_list["authorization_endpoint"], provider_config)
+            response=requests.get(uri_list["authorization_endpoint"], data=provider_config, headers=headers )
             response.encoding = 'utf-8'
-            response.raise_for_status()
             self._code = self.retrieveCode(response.text())
+            response.raise_for_status()
         except HTTPError as http_error_msg:
-            print('HTTP error occurred: ' + str({http_error_msg}))
+            raise Exception('HTTP error occurred: '+str(response.status_code)+': ' + str({http_error_msg}))
         except Exception as err:
-            print('Other error occurred: '+ str({err}))
-        else:
-            print('Success!')
-
-    def retrieveCode(response):
+            raise Exception('Other error occurred: '+ str({err}))
+        
+    def retrieveCode(self, response):
         code = response.split('code=')[-1].split('&')
         return code[0]
 
-    def retrieveCodeResponse(self, response):
-        code = response.split('code=')[-1]
-        print(code)
-
-    def postRequestToken(self,uri_list, code):
-     
-        provider_config={"grant_type": 'authorization_code', "code": self._code, "redirect_uri": self.redirect_uri, "scope": self.scope}
+    def postRequestToken(self,uri_list):
+        '''
+        Method that retrieves information from the token endpoint in order to retrieve the authorization token 
+        '''
+        provider_config={"grant_type": 'authorization_code', "code": self._code, "redirect_uri": self.redirect_uri, "scope": self.scope, "client_id": self.client_id, "client_secret": self.client_secret}
+        headers = { 'content-type': "application/x-www-form-urlencoded" }
         if self.client_id and self.client_secret:
-            client_config = {"client_id": self.client_id, "client_secret": self.client_secret}
             try:
-                response = requests.post(uri_list["token_endpoint"], provider_config, client_config)
+                response = requests.post(uri_list["token_endpoint"], data=provider_config, headers=headers)
                 response.encoding = 'utf-8'
+                self.retrieveToken(response.json().items())
                 response.raise_for_status()
             except HTTPError as http_error_msg:
-                print('HTTP error occurred: ' + str({http_error_msg}))
+                raise Exception('HTTP error occurred: ' + str({http_error_msg}))
             except Exception as err:
-                print('Other error occurred: '+ str({err}))
+                raise Exception('Other error occurred: '+ str({err}))
+            
+    def retrieveToken(self, response):
+        tkn = {}
+        for k , v in response:
+            if "access_token" in k:
+                tkn[k]=v
+            elif "token_type" in k:
+                tkn[k]=v
+            elif "refresh_token" in k:
+                tkn[k]=v
+            elif "id_token" in k:
+                tkn[k]=v
+            elif "expires_in" in k:
+                tkn[k]=v
             else:
-                print('Success!')
-        
+                continue
+        self._token=tkn
+  
 
+    # def connectWithApi(self, url_dict):
+    #     if self.authorized:
+    #         headers = {'content-type': "application/x-www-form-urlencoded",'authorization': "Bearer "+ self._token}
+    #         try:
+    #             response = requests.get(uri_dict["issuer"], headers=headers)
+    #             response.encoding = 'utf-8'
+    #             token = {}
+    #             self.retrieveToken(response.json().items())
+    #             response.raise_for_status()
+    #         except HTTPError as http_error_msg:
+    #             print('HTTP error occurred: ' + str({http_error_msg}))
+    #         except Exception as err:
+    #             print('Other error occurred: '+ str({err}))
+    #         else:
+    #             print('Success!')
+    #     else:
+    #         print('Not authorized with token')
+    #         pass
+
+    def validateToken():
+        '''
+        Method that retrieves information from the authorization endpoint in order to retrieve the authorization code 
+        '''
+        pass
+        
     def testLib(self):
         print('Lets do some requests')
 
@@ -120,4 +180,12 @@ class OpenIDClient:
     @code.setter 
     def code(self, a): 
         self._code = a 
+
+    @property
+    def token(self): 
+        return self._token
+         
+    @token.setter 
+    def token(self, a): 
+        self._token = a 
   

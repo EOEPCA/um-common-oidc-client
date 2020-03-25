@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+
 def func(x):
     return x + 1
 
@@ -18,6 +19,8 @@ def retrieveDiscoveryInfo():
             scope_list=v
         elif "endpoint" in k[-8:]:
             q[k]=v
+        elif "issuer" in k:
+            url_dict[k]=v
         else:
             continue
     return q, scope_list
