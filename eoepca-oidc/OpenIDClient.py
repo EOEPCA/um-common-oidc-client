@@ -1,27 +1,35 @@
-
 import requests
 from requests.exceptions import HTTPError
 class OpenIDClient:
     def __init__(self, issuer = None, scope = None, acces_token = None, response_type=None, client_id=None, redirect_uri=None):
-    
-        self.token =acces_token
+        self._token={}
         self.scope = scope
         self.redirect_uri = redirect_uri
         self._client_id = client_id
         self.response_type = 'code'
         self._client_secret = None
         self._code = None
-        self._token = acces_token
+        self._token['token_hint'] = acces_token
         self.method = 'GET'
         self.issuer = issuer
         self.state = None
- 
+    
     def authorized(self):
         '''
         Boolean method that returns true in case the client an authorization token
         '''
-        return bool(self._token)
-
+        try:
+                
+            for k,v in _token:
+                print(bool(v))
+            a = bool(self._token['token_hint'])
+            print (self._token)
+            
+            print(bool(self._token))
+            return bool(self._token)
+        except Exception as err:
+            return False
+            
     def supportedScopes(self, supportedScopes):
         '''
         Method that returns error in case the scopes provided by the RP doesn't satisfy the host's supported scopes.
@@ -35,23 +43,23 @@ class OpenIDClient:
         else:
             raise Exception('Scope error, could not find the required scopes for OIDC Connect auth')
 
-    def requestAuth(self, method, issuer):
+    def requestAuth(self, method, issuer, token = None, verify = True):
         '''
         The logic implemented on this webpage should retrieve the token from the URL
         '''
         try:
-            uri_dict_supported, scope_list_supported = self.getDiscoveryUrl(issuer)
+            uri_dict_supported, scope_list_supported = self.getDiscoveryUrl(issuer, verify)
 
             if method == 'GET':
-                self.getRequestCode(uri_dict)
+                return self.getRequestCode(uri_dict,self.token_hint,verify)
             elif method == 'POST':
-                self.postRequestToken(uri_dict)
+                return self.postRequestToken(uri_dict)
             else:
                 raise Exception('The request must have a method defined')
         except Exception as err:
             raise Exception('Other error occurred: '+ str({err}))
             
-    def getDiscoveryUrl(self, sso_node):
+    def getDiscoveryUrl(self, sso_node, verify = True):
         '''
         Method that retrieves information from the openid configuration of the host by GET method. It is used to verify the scopes and endpoint inputs
         Returns 
@@ -59,7 +67,7 @@ class OpenIDClient:
             <Dict>url_dict: Dictionary with all host endpoints 
         '''
         url_dict = {}
-        response=requests.get(str(sso_node)+'/.well_known/openid-configuration')
+        response=requests.get(str(sso_node)+'/.well_known/openid-configuration',verify = verify)
         response.encoding = 'utf-8'
         scope_list=[]
         url_list=[]
@@ -75,16 +83,18 @@ class OpenIDClient:
                 continue
         return url_dict, scope_list
 
-    def getRequestCode(self, uri_list):
+    def getRequestCode(self, uri_list, token = False, verify=True):
         '''
         Method that retrieves information from the authorization endpoint in order to retrieve the authorization code   
         '''
+        header = None
+        if token:
+            header = {'authorization': "Basic "+str(token)}
         provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
         try:
-            response=requests.get(uri_list["authorization_endpoint"], data=provider_config, headers=headers )
+            response=requests.get(uri_list["authorization_endpoint"], data=provider_config, header = header, verify=verify)
             response.encoding = 'utf-8'
-            self._code = self.retrieveCode(response.text())
-            response.raise_for_status()
+            self._code = self.retrieveCode(response.json())
         except HTTPError as http_error_msg:
             raise Exception('HTTP error occurred: '+str(response.status_code)+': ' + str({http_error_msg}))
         except Exception as err:
