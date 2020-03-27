@@ -4,7 +4,7 @@ jobs:
   include:
     - stage: Testing
       install: pip install -r eoepca_oidc/requirements.txt
-      script: pytest tests
+      script: python3 -m unittest tests/sum_test.py
 
 deploy:
   provider: pypi

@@ -5,6 +5,7 @@ from requests.exceptions import HTTPError
 import unittest
 import mock
 from eoepca_oidc import OpenIDClient
+
 # import os, sys
 # sys.path.append(os.path.abspath('..'))
 # from OpenIDClient import OpenIDClient
@@ -24,7 +25,7 @@ def mocked_requests_post(*args, **kwargs):
     obj2={"access_token":"2YotnFZFEjr1zCsicMWpAA","token_type":"example","expires_in":3600,"example_parameter":"example_value"}
     if 'application/x-www-form-urlencoded' in list(kwargs.get('headers').items())[0] and 'code' in kwargs.get('data') and 'client_id' in kwargs.get('data') and 'client_secret' in kwargs.get('data') and 'redirect_uri' in kwargs.get('data'):
         return MockResponse('HTTP/1.1 200 OK Content-Type: application/json Cache-Control: no-store Pragma: no-cache ',obj, 200)
-    elif 'authorization' in list(kwargs.get('headers').items())[1] and 'client_credentials' in list(kwargs.get('data').items())[0]:
+    elif ('authorization' in list(kwargs.get('headers').items())[1] or'authorization' in list(kwargs.get('headers').items())[0])  and 'client_credentials' in list(kwargs.get('data').items())[0]:
         return MockResponse('HTTP/1.1 200 OK Content-Type: application/json;charset=UTF-8 Cache-Control: no-store Pragma: no-cache ',obj2, 200)
     return MockResponse(None, None, 404)
 
@@ -40,7 +41,7 @@ def mocked_requests_get(*args, **kwargs):
         def content(self):
             return self.content
 
-    with open('tst.json', 'r') as myfile:
+    with open('tests/tst.json', 'r') as myfile:
         data=myfile.read()
     obj = json.loads(data)
     
@@ -66,7 +67,7 @@ class OIDC_Unit_Test(unittest.TestCase):
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
             mock_resp.raise_for_status.side_effect = raise_for_status
-        oidc = OpenIDClient()
+        oidc = OpenIDClient.OpenIDClient()
         oidc.scope = 'openid'
         url_list={'issuer': '[APIDOMAIN]', 'authorization_endpoint': '[APIDOMAIN]/oxauth/restv1/authorize', 'token_endpoint': '[APIDOMAIN]/oxauth/restv1/token', 'userinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/userinfo', 'clientinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/clientinfo', 'end_session_endpoint': '[APIDOMAIN]/oxauth/restv1/end_session', 'registration_endpoint': '[APIDOMAIN]/oxauth/restv1/register', 'id_generation_endpoint': '[APIDOMAIN]/oxauth/restv1/id'}
         scope_list=['openid', 'controlled_client', 'jira_groups', 'user_name', 'profile', 'email', 'permission', 'geoss_user', 'OpenAccess', 'jira_mail', 'mobile_phone', 'phone', 'address', 'geoss_management', 'clientinfo']
@@ -91,7 +92,7 @@ class OIDC_Unit_Test(unittest.TestCase):
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
             mock_resp.raise_for_status.side_effect = raise_for_status
-        oidc = OpenIDClient()
+        oidc = OpenIDClient.OpenIDClient()
         oidc.scope = 'openid'
         oidc._code = 'SplxlOBeZQQYbYS6WxSbIA'
         oidc.client_id = 'Default client'
