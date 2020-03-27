@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-  name = 'eoepca-oidc',
+  name = 'eoepca_oidc',
   version = '0.0.1',
   author = 'EOEPCA',
   author_email = 'alvaro.villanueva@deimos-space.com',

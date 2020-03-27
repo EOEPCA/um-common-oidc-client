@@ -3,7 +3,7 @@ python: 3.6.9
 jobs:
   include:
     - stage: Testing
-      install: pip install -r eoepca-oidc/requirements.txt
+      install: pip install -r eoepca_oidc/requirements.txt
       script: pytest tests
 
 deploy:
