@@ -127,15 +127,15 @@ class OpenIDClient:
             provider_config={"grant_type": 'client_credentials'}
         else: 
             headers = { 'content-type': "application/x-www-form-urlencoded" }
-
             provider_config={"grant_type": 'authorization_code', "code": self._code, "redirect_uri": self.redirect_uri, "scope": self.scope, "client_id": self.client_id, "client_secret": self.client_secret}
         
         if self.client_id and self.client_secret:
             try:
                 response = requests.post(uri_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
                 response.encoding = 'utf-8'
-                #set token dictionary with the response values
+                #edit token dictionary with the response values
                 self._token=self.retrieveToken(response.json().items())
+                
             except HTTPError as http_error_msg:
                 raise Exception('HTTP error occurred: ' + str({http_error_msg}))
             except Exception as err:

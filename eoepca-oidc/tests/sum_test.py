@@ -3,7 +3,7 @@ import requests
 import json
 from requests.exceptions import HTTPError
 import unittest
-from unittest import mock
+import mock
 import os, sys
 sys.path.append(os.path.abspath('..'))
 from OpenIDClient import OpenIDClient
@@ -23,9 +23,9 @@ def mocked_requests_post(*args, **kwargs):
     obj2={"access_token":"2YotnFZFEjr1zCsicMWpAA","token_type":"example","expires_in":3600,"example_parameter":"example_value"}
     if 'application/x-www-form-urlencoded' in list(kwargs.get('headers').items())[0] and 'code' in kwargs.get('data') and 'client_id' in kwargs.get('data') and 'client_secret' in kwargs.get('data') and 'redirect_uri' in kwargs.get('data'):
         return MockResponse('HTTP/1.1 200 OK Content-Type: application/json Cache-Control: no-store Pragma: no-cache ',obj, 200)
-    elif 'authorization' in list(kwargs.get('headers').items())[0] and 'client_credentials' in list(kwargs.get('data').items())[0]:
+    elif 'authorization' in list(kwargs.get('headers').items())[1] and 'client_credentials' in list(kwargs.get('data').items())[0]:
         return MockResponse('HTTP/1.1 200 OK Content-Type: application/json;charset=UTF-8 Cache-Control: no-store Pragma: no-cache ',obj2, 200)
-    return MockResponse(None, 404)
+    return MockResponse(None, None, 404)
 
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
@@ -60,7 +60,7 @@ class OIDC_Unit_Test(unittest.TestCase):
     # First, mock has to simulate http response, therefore a patch of get and post methods from requests library will be needed.
     
     @mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_get(self, mock_get,raise_for_status=None):
+    def test_get_code_auth(self, mock_get,raise_for_status=None):
         mock_resp = mock.Mock()
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
@@ -77,15 +77,15 @@ class OIDC_Unit_Test(unittest.TestCase):
         self.assertIn(mock.call('[APIDOMAIN]/.well_known/openid-configuration',verify=True), mock_get.call_args_list)
 
         #provider_config={"scope": 'openid',"response_type": 'code', "client_id": 'randomClient',"redirect_uri": 'http://url/callback'}
-        oidc.getRequestCode(uris, verify=False)        
+        oidc.getRequestCode(uris,token=None, verify=False)        
         self.assertEqual(oidc._code, 'AIIEHGSKIUOIFNKLOSIUOI')
-        oidc.authType='Bearer '
+        oidc._authType='Bearer '
         oidc.getRequestCode(uris,token = 'aslf;alksjkekeke', verify=False)
         self.assertEqual(oidc._code, 'SplxlOBeZQQYbYS6WxSbIA')
 
     
     @mock.patch('requests.post', side_effect=mocked_requests_post)
-    def test_fetch3(self, mock_get,raise_for_status=None):
+    def test_token_retrieval(self, mock_get,raise_for_status=None):
         mock_resp = mock.Mock()
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
@@ -100,7 +100,7 @@ class OIDC_Unit_Test(unittest.TestCase):
          #POST example of access token retrieval. 
         oidc.postRequestToken(url_list, token = None, verify=True)
         self.assertEqual(oidc._token['access_token'], 'SlAV32hkKG')
-        oidc.authType='Bearer '
+        oidc._authType='Bearer '
         oidc.postRequestToken(url_list, token = 'SlAV32hkKG', verify=True)
         self.assertEqual(oidc._token['access_token'], '2YotnFZFEjr1zCsicMWpAA')
        
