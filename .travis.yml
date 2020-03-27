@@ -1,11 +1,10 @@
 language: python
 python: 3.6.9
-
 jobs:
   include:
     - stage: Testing
       install: pip install -r eoepca-oidc/requirements.txt
-      script: pytest eoepca-oidc/tests
+      script: pytest tests
 
 deploy:
   provider: pypi

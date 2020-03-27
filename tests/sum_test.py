@@ -4,7 +4,7 @@ import json
 from requests.exceptions import HTTPError
 import unittest
 import mock
-from .context import OpenIDClient
+from eoepca_oidc import OpenIDClient
 # import os, sys
 # sys.path.append(os.path.abspath('..'))
 # from OpenIDClient import OpenIDClient

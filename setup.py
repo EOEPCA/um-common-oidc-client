@@ -7,7 +7,7 @@ setuptools.setup(
   name = 'eoepca-oidc',
   version = '0.0.1',
   author = 'EOEPCA',
-  author_email = 'angel.lozano@deimos-space.com',
+  author_email = 'alvaro.villanueva@deimos-space.com',
   description = 'Open ID Connect python library developed by the EOEPCA team',
   long_description = long_description,
   long_description_content_type="text/markdown",
