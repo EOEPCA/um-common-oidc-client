@@ -4,9 +4,10 @@ import json
 from requests.exceptions import HTTPError
 import unittest
 import mock
-import os, sys
-sys.path.append(os.path.abspath('..'))
-from OpenIDClient import OpenIDClient
+from .context import OpenIDClient
+# import os, sys
+# sys.path.append(os.path.abspath('..'))
+# from OpenIDClient import OpenIDClient
 
 def mocked_requests_post(*args, **kwargs):
     class MockResponse:
