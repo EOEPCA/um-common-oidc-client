@@ -52,7 +52,10 @@
 
 ## Getting Started
 
+OpenID Connect Client implementation of end-user and client authentication
+
 To get a local copy up and running follow these simple steps.
+
 
 ### Prerequisites
 
@@ -66,13 +69,13 @@ This is an example of how to list things you need to use the software and how to
 Just download the library using pip
 
 ```sh
-pip install eoepca-oidc
+pip install eoepca_oidc
 ```
 
 ### Testing
 
 ```sh
-pytest eoepca-oidc/tests
+pytest eoepca_oidc/tests
 ```
 
 ## Roadmap
