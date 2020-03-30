@@ -4,8 +4,9 @@ class OpenIDClient:
     '''
     implementation of an OIDC Client module in order to provide Client authentication and End-User authentication functionality according to the OpenIDConnect Authentication Code Flow
         Input params:
-            <string>issuer: 
+            <string>issuer
             <string>authType: Bearer(token auth), Basic(client credentials) or None(New auth). It must be set when the user has login parameters.
+            <string>method: Shall be GET by default in order to fulfill an authentication
     
     '''
     def __init__(self, issuer = None, scope = None, acces_token = None, response_type=None, client_id=None, client_secret=None, redirect_uri=None, authType = None):
@@ -17,10 +18,12 @@ class OpenIDClient:
         self._client_secret = client_secret
         self._code = None
         self._token['token_hint'] = acces_token
-        self.method = 'GET'
+        self._method = 'GET'
         self.issuer = issuer
         self.state = None
         self._authType= authType
+        if self.issuer:
+            self.getEndpointInformation(self.issuer)
     
     def authorized(self):
         '''
@@ -33,11 +36,11 @@ class OpenIDClient:
         except Exception as err:
             return False
             
-    def supportedScopes(self, supportedScopes):
+    def _supportedScopes(self, supportedScopes):
         '''
         Method that returns error in case the scopes provided by the RP doesn't satisfy the host's supported scopes.
         '''
-        if 'openid' in self.scopes and 'ogc_user' in self.scopes:
+        if 'openid' in self.scopes in self.scopes:
             for i in self.scope:
                 if i in supportedScopes:
                     continue
@@ -46,24 +49,27 @@ class OpenIDClient:
         else:
             raise Exception('Scope error, could not find the required scopes for OIDC Connect auth')
 
-    def requestAuth(self, method, issuer, verify = True):
+    def requestAuth(self, method=self._method, issuer=self.issuer, verify = True):
         '''
         The logic implemented on this webpage should retrieve the token from the URL in case the user is not authenticated
         If a token_hint is given the OP should response a succesfully authentication
         '''
         try:
-            uri_dict_supported, scope_list_supported = self.getDiscoveryUrl(issuer, verify)
-           
+            uri_dict_supported, scope_list_supported = self.getEndpointInformation(issuer, verify)
+            _supportedScopes(scope_list_supported)
             if method == 'GET':
-                return self.getRequestCode(uri_dict,self.token_hint, verify)
+                #Retrieve Code or Login
+                self.getRequestCode(uri_dict,self.token_hint, verify)
+                #Retrieve Token
+                self.postRequestToken(uri_dict,self.token_hint, verify)
             elif method == 'POST':
-                return self.postRequestToken(uri_dict,self.token_hint, verify)
+                self.postRequestToken(uri_dict,self.token_hint, verify)
             else:
                 raise Exception('The request must have a method defined')
         except Exception as err:
             raise Exception('Other error occurred: '+ str({err}))
             
-    def getDiscoveryUrl(self, sso_node, verify = True):
+    def getEndpointInformation(self, sso_node, verify = True):
         '''
         Method that retrieves information from the openid configuration of the host by GET method. It is used to verify the scopes and endpoint inputs
         Input
@@ -94,23 +100,27 @@ class OpenIDClient:
         Method that retrieves information from the authorization endpoint in order to retrieve the authorization code
         The response of the get request is parsed in order to retrieve the authentication code  
         '''
-        headers = None
-        if token:
-            headers = {'authorization': self._authType+str(token)}
-            provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri,"prompt":'login'}
-        else:
-            provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
         try:
+            self.getEndpointInformation(self.issuer)
+            _supportedScopes(scope_list_supported)
+            headers = None
+            if token:
+                headers = {'authorization': self._authType+str(token)}
+                provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri,"prompt":'login'}
+            else:
+                provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
+            
+
             response=requests.get(uri_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
             response.encoding = 'utf-8'
-
-            self._code = self.retrieveCode(response.content)
+            #shall be defined a status_code for each response
+            self._code = self._retrieveCode(response.content)
         except HTTPError as http_error_msg:
             raise Exception('HTTP error occurred: '+str(response.status_code)+': ' + str({http_error_msg}))
         except Exception as err:
             raise Exception('Other error occurred: '+ str({err}))
         
-    def retrieveCode(self, response):
+    def _retrieveCode(self, response):
         '''
         The input parameter content is parsed in order to retrieve and return the authentication code
         '''
@@ -133,15 +143,16 @@ class OpenIDClient:
             try:
                 response = requests.post(uri_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
                 response.encoding = 'utf-8'
+                #shall be defined a status_code for each response
                 #edit token dictionary with the response values
-                self._token=self.retrieveToken(response.json().items())
+                self._token=self._retrieveToken(response.json().items())
                 
             except HTTPError as http_error_msg:
                 raise Exception('HTTP error occurred: ' + str({http_error_msg}))
             except Exception as err:
                 raise Exception('Other error occurred: '+ str({err}))
             
-    def retrieveToken(self, response):
+    def _retrieveToken(self, response):
         '''
         The retrieved token will be set as dictionary where the keys are the token parameters recived in the body
 
@@ -211,3 +222,10 @@ class OpenIDClient:
     def authType(self, a): 
         self._authType = a 
   
+    @property
+    def method(self): 
+        return self._method
+         
+    @mehod.setter 
+    def method(self, a): 
+        self._method = a 

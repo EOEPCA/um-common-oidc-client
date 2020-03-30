@@ -72,7 +72,7 @@ class OIDC_Unit_Test(unittest.TestCase):
         url_list={'issuer': '[APIDOMAIN]', 'authorization_endpoint': '[APIDOMAIN]/oxauth/restv1/authorize', 'token_endpoint': '[APIDOMAIN]/oxauth/restv1/token', 'userinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/userinfo', 'clientinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/clientinfo', 'end_session_endpoint': '[APIDOMAIN]/oxauth/restv1/end_session', 'registration_endpoint': '[APIDOMAIN]/oxauth/restv1/register', 'id_generation_endpoint': '[APIDOMAIN]/oxauth/restv1/id'}
         scope_list=['openid', 'controlled_client', 'jira_groups', 'user_name', 'profile', 'email', 'permission', 'geoss_user', 'OpenAccess', 'jira_mail', 'mobile_phone', 'phone', 'address', 'geoss_management', 'clientinfo']
         #testing the endpoints retrieval and supported scopes
-        [uris,scopes] = oidc.getDiscoveryUrl('[APIDOMAIN]')
+        [uris,scopes] = oidc.getEndpointInformation('[APIDOMAIN]')
         self.assertEqual(scopes, scope_list)
         self.assertEqual(uris, url_list)
         #check the input parameters to get request
