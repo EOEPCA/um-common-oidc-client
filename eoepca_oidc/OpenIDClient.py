@@ -9,9 +9,10 @@ class OpenIDClient:
             <string>method: Shall be GET by default in order to fulfill an authentication
     
     '''
-    def __init__(self, issuer = None, scope = None, acces_token = None, response_type=None, client_id=None, client_secret=None, redirect_uri=None, authType = None):
+    def __init__(self, issuer = None, scope = 'openid', acces_token = None, response_type=None, client_id=None, client_secret=None, redirect_uri=None, authType = None):
         self._token = {}
-        self.scope = scope
+        self.scope = []
+        self.scope.append(scope)
         self.redirect_uri = redirect_uri
         self._client_id = client_id
         self.response_type = response_type
@@ -40,7 +41,11 @@ class OpenIDClient:
         '''
         Method that returns error in case the scopes provided by the RP doesn't satisfy the host's supported scopes.
         '''
-        if 'openid' in self.scopes in self.scopes:
+        
+        if isinstance(self.scope, str) and 'openid' in self.scope:
+            pass
+            
+        elif 'openid' in self.scope:
             for i in self.scope:
                 if i in supportedScopes:
                     continue
@@ -49,14 +54,13 @@ class OpenIDClient:
         else:
             raise Exception('Scope error, could not find the required scopes for OIDC Connect auth')
 
-    def requestAuth(self, method=self._method, issuer=self.issuer, verify = True):
+    def requestAuth(self,  issuer, method='GET',verify = True):
         '''
         The logic implemented on this webpage should retrieve the token from the URL in case the user is not authenticated
         If a token_hint is given the OP should response a succesfully authentication
         '''
         try:
             uri_dict_supported, scope_list_supported = self.getEndpointInformation(issuer, verify)
-            _supportedScopes(scope_list_supported)
             if method == 'GET':
                 #Retrieve Code or Login
                 self.getRequestCode(uri_dict,self.token_hint, verify)
@@ -93,6 +97,7 @@ class OpenIDClient:
                 url_dict[k]=v
             else:
                 continue
+        self._supportedScopes(scope_list)
         return url_dict, scope_list
 
     def getRequestCode(self, uri_list, token = None, verify=True):
@@ -102,7 +107,6 @@ class OpenIDClient:
         '''
         try:
             self.getEndpointInformation(self.issuer)
-            _supportedScopes(scope_list_supported)
             headers = None
             if token:
                 headers = {'authorization': self._authType+str(token)}
@@ -226,6 +230,6 @@ class OpenIDClient:
     def method(self): 
         return self._method
          
-    @mehod.setter 
+    @method.setter 
     def method(self, a): 
         self._method = a 

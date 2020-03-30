@@ -52,7 +52,11 @@
 
 ## Getting Started
 
-OpenID Connect Client implementation of end-user and client authentication
+This is an OpenID Connect Client implementation of end-user and client authentication
+
+In order to upload into travis the new versions, just commit your work with TAG on it in any branch. 
+This will allow other developers to release patches without merging into master branch.
+
 
 To get a local copy up and running follow these simple steps.
 
