@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name = 'eoepca_oidc',
-  version = '0.0.2a',
+  version = '0.0.2',
   author = 'EOEPCA',
   author_email = 'alvaro.villanueva@deimos-space.com',
   description = 'Open ID Connect python library developed by the EOEPCA team',
