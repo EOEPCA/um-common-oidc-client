@@ -1,4 +1,2 @@
-# PLACE HERE ALL IMPORTS
-from eoepca_oidc import OpenIDClient
-from tests import oidc_tests
-# from MyLibrary.thing import another_thing
+#!/usr/bin/env python3
+from eoepca_oidc.OpenIDClient import OpenIDClient
