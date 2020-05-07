@@ -6,10 +6,6 @@ import unittest
 import mock
 from eoepca_oidc import OpenIDClient
 
-# import os, sys
-# sys.path.append(os.path.abspath('..'))
-# from OpenIDClient import OpenIDClient
-
 def mocked_requests_post(*args, **kwargs):
     class MockResponse:
         def __init__(self, content ,json_data, status_code):
@@ -67,7 +63,7 @@ class OIDC_Unit_Test(unittest.TestCase):
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
             mock_resp.raise_for_status.side_effect = raise_for_status
-        oidc = OpenIDClient.OpenIDClient()
+        oidc = OpenIDClient()
         oidc.scope = 'openid'
         url_list={'issuer': '[APIDOMAIN]', 'authorization_endpoint': '[APIDOMAIN]/oxauth/restv1/authorize', 'token_endpoint': '[APIDOMAIN]/oxauth/restv1/token', 'userinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/userinfo', 'clientinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/clientinfo', 'end_session_endpoint': '[APIDOMAIN]/oxauth/restv1/end_session', 'registration_endpoint': '[APIDOMAIN]/oxauth/restv1/register', 'id_generation_endpoint': '[APIDOMAIN]/oxauth/restv1/id'}
         scope_list=['openid', 'controlled_client', 'jira_groups', 'user_name', 'profile', 'email', 'permission', 'geoss_user', 'OpenAccess', 'jira_mail', 'mobile_phone', 'phone', 'address', 'geoss_management', 'clientinfo']
@@ -92,7 +88,7 @@ class OIDC_Unit_Test(unittest.TestCase):
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
             mock_resp.raise_for_status.side_effect = raise_for_status
-        oidc = OpenIDClient.OpenIDClient()
+        oidc = OpenIDClient()
         oidc.scope = 'openid'
         oidc._code = 'SplxlOBeZQQYbYS6WxSbIA'
         oidc.client_id = 'Default client'
