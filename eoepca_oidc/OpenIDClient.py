@@ -1,5 +1,6 @@
 import requests
 from requests.exceptions import HTTPError
+from WellKnownHandler import WellKnownHandler, TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES
 class OpenIDClient:
     '''
     implementation of an OIDC Client module in order to provide Client authentication and End-User authentication functionality according to the OpenIDConnect Authentication Code Flow
@@ -10,6 +11,7 @@ class OpenIDClient:
     
     '''
     def __init__(self, issuer = None, scope = 'openid', acces_token = None, response_type=None, client_id=None, client_secret=None, redirect_uri=None, authType = None):
+    
         self._token = {}
         self.scope = []
         self.scope.append(scope)
@@ -24,6 +26,7 @@ class OpenIDClient:
         self.state = None
         self._authType= authType
         if self.issuer:
+            self.wkh = WellKnownHandler(self.issuer, secure=False)
             self.getEndpointInformation(self.issuer)
     
     def authorized(self):
@@ -60,14 +63,14 @@ class OpenIDClient:
         If a token_hint is given the OP should response a succesfully authentication
         '''
         try:
-            uri_dict_supported, scope_list_supported = self.getEndpointInformation(issuer, verify)
+            self.getEndpointInformation(issuer, verify)
             if method == 'GET':
                 #Retrieve Code or Login
-                self.getRequestCode(uri_dict,self.token_hint, verify)
+                self.getRequestCode(self.token_hint, verify)
                 #Retrieve Token
-                self.postRequestToken(uri_dict,self.token_hint, verify)
+                self.postRequestToken(self.token_hint, verify)
             elif method == 'POST':
-                self.postRequestToken(uri_dict,self.token_hint, verify)
+                self.postRequestToken(self.token_hint, verify)
             else:
                 raise Exception('The request must have a method defined')
         except Exception as err:
@@ -83,24 +86,11 @@ class OpenIDClient:
             <List>scope_list: List of all supported scopes by the host
             <Dict>url_dict: Dictionary with all host endpoints 
         '''
-        url_dict = {}
-        response=requests.get(str(sso_node)+'/.well_known/openid-configuration',verify = verify)
-        response.encoding = 'utf-8'
-        scope_list=[]
-        url_list=[]
-        for k , v in response.json().items():
-            if "scopes_supported" in k:
-                scope_list=v
-            elif "endpoint" in k[-8:]:
-                url_dict[k]=v
-            elif "issuer" in k:
-                url_dict[k]=v
-            else:
-                continue
-        self._supportedScopes(scope_list)
-        return url_dict, scope_list
 
-    def getRequestCode(self, uri_list, token = None, verify=True):
+        scope_list= self.wkh.get(TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES)
+        self._supportedScopes(scope_list)
+
+    def getRequestCode(self, token = None, verify=True):
         '''
         Method that retrieves information from the authorization endpoint in order to retrieve the authorization code
         The response of the get request is parsed in order to retrieve the authentication code  
@@ -115,7 +105,7 @@ class OpenIDClient:
                 provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
             
 
-            response=requests.get(uri_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
+            response=requests.get(self.wkh.get(TYPE_OIDC, KEY_OIDC_AUTHORIZATION_ENDPOINT), data=provider_config, headers = headers, verify=verify)
             response.encoding = 'utf-8'
             #shall be defined a status_code for each response
             self._code = self._retrieveCode(response.content)
@@ -131,7 +121,7 @@ class OpenIDClient:
         code = response.split('code=')[-1].split('&')
         return code[0]
 
-    def postRequestToken(self,uri_list, token = None, verify=True):
+    def postRequestToken(self, token = None, verify=True):
         '''
         Method that retrieves information from the token endpoint in order to retrieve the authorization token 
         '''
@@ -145,7 +135,7 @@ class OpenIDClient:
         
         if self.client_id and self.client_secret:
             try:
-                response = requests.post(uri_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
+                response = requests.post(self.wkh.get(TYPE_OIDC,KEY_OIDC_TOKEN_ENDPOINT), data=provider_config, headers=headers, verify = verify)
                 response.encoding = 'utf-8'
                 #shall be defined a status_code for each response
                 #edit token dictionary with the response values
