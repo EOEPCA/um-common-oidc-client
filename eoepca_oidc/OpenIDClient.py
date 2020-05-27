@@ -96,7 +96,7 @@ class OpenIDClient:
         The response of the get request is parsed in order to retrieve the authentication code  
         '''
         try:
-            self.getEndpointInformation(self.issuer)
+            #self.getEndpointInformation(self.issuer)
             headers = None
             if token:
                 headers = {'authorization': self._authType+str(token)}
