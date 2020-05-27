@@ -5,6 +5,7 @@ from requests.exceptions import HTTPError
 import unittest
 import mock
 from eoepca_oidc import OpenIDClient
+from WellKnownHandler import WellKnownHandler, TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES
 
 def mocked_requests_post(*args, **kwargs):
     class MockResponse:
@@ -63,22 +64,20 @@ class OIDC_Unit_Test(unittest.TestCase):
         mock_resp.raise_for_status = mock.Mock()
         if raise_for_status:
             mock_resp.raise_for_status.side_effect = raise_for_status
-        oidc = OpenIDClient()
-        oidc.scope = 'openid'
+        oidc = OpenIDClient(scope = 'openid', issuer = '[APIDOMAIN]')
         url_list={'issuer': '[APIDOMAIN]', 'authorization_endpoint': '[APIDOMAIN]/oxauth/restv1/authorize', 'token_endpoint': '[APIDOMAIN]/oxauth/restv1/token', 'userinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/userinfo', 'clientinfo_endpoint': '[APIDOMAIN]/oxauth/restv1/clientinfo', 'end_session_endpoint': '[APIDOMAIN]/oxauth/restv1/end_session', 'registration_endpoint': '[APIDOMAIN]/oxauth/restv1/register', 'id_generation_endpoint': '[APIDOMAIN]/oxauth/restv1/id'}
         scope_list=['openid', 'controlled_client', 'jira_groups', 'user_name', 'profile', 'email', 'permission', 'geoss_user', 'OpenAccess', 'jira_mail', 'mobile_phone', 'phone', 'address', 'geoss_management', 'clientinfo']
         #testing the endpoints retrieval and supported scopes
-        [uris,scopes] = oidc.getEndpointInformation('[APIDOMAIN]')
+        scopes = oidc.getEndpointInformation('[APIDOMAIN]')
         self.assertEqual(scopes, scope_list)
-        self.assertEqual(uris, url_list)
         #check the input parameters to get request
         self.assertIn(mock.call('[APIDOMAIN]/.well_known/openid-configuration',verify=True), mock_get.call_args_list)
 
         #provider_config={"scope": 'openid',"response_type": 'code', "client_id": 'randomClient',"redirect_uri": 'http://url/callback'}
-        oidc.getRequestCode(uris,token=None, verify=False)        
+        oidc.getRequestCode(token=None, verify=False)        
         self.assertEqual(oidc._code, 'AIIEHGSKIUOIFNKLOSIUOI')
         oidc._authType='Bearer '
-        oidc.getRequestCode(uris,token = 'aslf;alksjkekeke', verify=False)
+        oidc.getRequestCode(token = 'aslf;alksjkekeke', verify=False)
         self.assertEqual(oidc._code, 'SplxlOBeZQQYbYS6WxSbIA')
 
     
