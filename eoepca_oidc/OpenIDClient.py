@@ -122,12 +122,17 @@ class OpenIDClient:
                 provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri,"prompt":'login'}
             else:
                 provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
-            response = None
             if self.issuer:
                 response=requests.get(self.wkh.get(TYPE_OIDC, KEY_OIDC_AUTHORIZATION_ENDPOINT), data=provider_config, headers = headers, verify=verify)
+                response.encoding = 'utf-8'
+                self._code = self._retrieveCode(response.content)
+
             else: 
-                response= requests.get(uri_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
-            response.encoding = 'utf-8'
+                response= requests.get(url_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
+                response.encoding = 'utf-8'
+                self._code = self._retrieveCode(response.content)
+
+            
             #shall be defined a status_code for each response
             self._code = self._retrieveCode(response.content)
         except HTTPError as http_error_msg:
@@ -155,17 +160,15 @@ class OpenIDClient:
             provider_config={"grant_type": 'authorization_code', "code": self._code, "redirect_uri": self.redirect_uri, "scope": self.scope, "client_id": self.client_id, "client_secret": self.client_secret}
         
         if self.client_id and self.client_secret:
-            try:
-                response = None
+            try:  
                 if self.issuer:
                     response = requests.post(self.wkh.get(TYPE_OIDC,KEY_OIDC_TOKEN_ENDPOINT), data=provider_config, headers=headers, verify = verify)
+                    response.encoding = 'utf-8'
+                    self._token=self._retrieveToken(response.json().items())
                 else:
                     repsonse = requests.post(url_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
-                response.encoding = 'utf-8'
-                #shall be defined a status_code for each response
-                #edit token dictionary with the response values
-                self._token=self._retrieveToken(response.json().items())
-                
+                    response.encoding = 'utf-8'
+                    self._token=self._retrieveToken(response.json().items())
             except HTTPError as http_error_msg:
                 raise Exception('HTTP error occurred: ' + str({http_error_msg}))
             except Exception as err:
