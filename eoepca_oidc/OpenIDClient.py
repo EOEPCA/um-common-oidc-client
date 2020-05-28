@@ -122,11 +122,11 @@ class OpenIDClient:
                 provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri,"prompt":'login'}
             else:
                 provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
-            
+            response = None
             if self.issuer:
                 response=requests.get(self.wkh.get(TYPE_OIDC, KEY_OIDC_AUTHORIZATION_ENDPOINT), data=provider_config, headers = headers, verify=verify)
             else: 
-                response= request.get(uri_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
+                response= requests.get(uri_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
             response.encoding = 'utf-8'
             #shall be defined a status_code for each response
             self._code = self._retrieveCode(response.content)
@@ -156,6 +156,7 @@ class OpenIDClient:
         
         if self.client_id and self.client_secret:
             try:
+                response = None
                 if self.issuer:
                     response = requests.post(self.wkh.get(TYPE_OIDC,KEY_OIDC_TOKEN_ENDPOINT), data=provider_config, headers=headers, verify = verify)
                 else:
