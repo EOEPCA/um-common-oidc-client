@@ -130,11 +130,8 @@ class OpenIDClient:
             else: 
                 response= requests.get(url_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
                 response.encoding = 'utf-8'
-                self._code = self._retrieveCode(response.content)
-
-            
+                self._code = self._retrieveCode(response.content)            
             #shall be defined a status_code for each response
-            self._code = self._retrieveCode(response.content)
         except HTTPError as http_error_msg:
             raise Exception('HTTP error occurred: '+str(response.status_code)+': ' + str({http_error_msg}))
         except Exception as err:
@@ -166,7 +163,7 @@ class OpenIDClient:
                     response.encoding = 'utf-8'
                     self._token=self._retrieveToken(response.json().items())
                 else:
-                    repsonse = requests.post(url_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
+                    response = requests.post(url_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
                     response.encoding = 'utf-8'
                     self._token=self._retrieveToken(response.json().items())
             except HTTPError as http_error_msg:
