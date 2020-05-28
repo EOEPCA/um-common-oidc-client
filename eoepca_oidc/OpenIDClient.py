@@ -90,7 +90,7 @@ class OpenIDClient:
         scope_list= self.wkh.get(TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES)
         self._supportedScopes(scope_list)
 
-    def getRequestCode(self, token = None, verify=True):
+    def getRequestCode(self,url_list=None token = None, verify=True):
         '''
         Method that retrieves information from the authorization endpoint in order to retrieve the authorization code
         The response of the get request is parsed in order to retrieve the authentication code  
@@ -104,8 +104,10 @@ class OpenIDClient:
             else:
                 provider_config={"scope": self.scope,"response_type": 'code', "client_id": self.client_id,"redirect_uri": self.redirect_uri}
             
-
-            response=requests.get(self.wkh.get(TYPE_OIDC, KEY_OIDC_AUTHORIZATION_ENDPOINT), data=provider_config, headers = headers, verify=verify)
+            if self.issuer:
+                response=requests.get(self.wkh.get(TYPE_OIDC, KEY_OIDC_AUTHORIZATION_ENDPOINT), data=provider_config, headers = headers, verify=verify)
+            else: 
+                response= request.get(uri_list["authorization_endpoint"], data=provider_config, headers = headers, verify=verify)
             response.encoding = 'utf-8'
             #shall be defined a status_code for each response
             self._code = self._retrieveCode(response.content)
@@ -135,7 +137,10 @@ class OpenIDClient:
         
         if self.client_id and self.client_secret:
             try:
-                response = requests.post(self.wkh.get(TYPE_OIDC,KEY_OIDC_TOKEN_ENDPOINT), data=provider_config, headers=headers, verify = verify)
+                if self.issuer:
+                    response = requests.post(self.wkh.get(TYPE_OIDC,KEY_OIDC_TOKEN_ENDPOINT), data=provider_config, headers=headers, verify = verify)
+                else:
+                    repsonse = requests.post(uri_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
                 response.encoding = 'utf-8'
                 #shall be defined a status_code for each response
                 #edit token dictionary with the response values
