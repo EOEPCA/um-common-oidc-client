@@ -43,9 +43,9 @@ def mocked_requests_get(*args, **kwargs):
     obj = json.loads(data)
     
     # add json data if provided
-    if '/.well_known/openid-configuration' in args[0]:
-        return MockResponse(None,obj, 200)
-    elif kwargs.get('headers') and 'scope' in kwargs.get('data') and 'response_type' in kwargs.get('data') and 'client_id' in kwargs.get('data') and 'redirect_uri' in kwargs.get('data'):
+    # if '/.well_known/openid-configuration' in args[0]:
+    #     return MockResponse(None,obj, 200)
+    if kwargs.get('headers') and 'scope' in kwargs.get('data') and 'response_type' in kwargs.get('data') and 'client_id' in kwargs.get('data') and 'redirect_uri' in kwargs.get('data'):
         return MockResponse('HTTP/1.1 302 Found Location: https://client.example.org/cb?code=SplxlOBeZQQYbYS6WxSbIA&state=af09ure9urf',None, 200)
     elif not kwargs.get('headers') and 'scope' in kwargs.get('data') and 'response_type' in kwargs.get('data') and 'client_id' in kwargs.get('data') and 'redirect_uri' in kwargs.get('data'):
         return MockResponse('HTTP/1.1 302 Found Location: https://client.example.org/cb?code=AIIEHGSKIUOIFNKLOSIUOI&state=af09ure9urf',None, 200)
