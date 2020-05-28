@@ -90,7 +90,7 @@ class OpenIDClient:
         scope_list= self.wkh.get(TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES)
         self._supportedScopes(scope_list)
 
-    def getRequestCode(self,url_list=None token = None, verify=True):
+    def getRequestCode(self,url_list=None, token = None, verify=True):
         '''
         Method that retrieves information from the authorization endpoint in order to retrieve the authorization code
         The response of the get request is parsed in order to retrieve the authentication code  
@@ -123,7 +123,7 @@ class OpenIDClient:
         code = response.split('code=')[-1].split('&')
         return code[0]
 
-    def postRequestToken(self, token = None, verify=True):
+    def postRequestToken(self,url_list=None, token = None, verify=True):
         '''
         Method that retrieves information from the token endpoint in order to retrieve the authorization token 
         '''
