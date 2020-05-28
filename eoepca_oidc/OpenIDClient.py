@@ -140,7 +140,7 @@ class OpenIDClient:
                 if self.issuer:
                     response = requests.post(self.wkh.get(TYPE_OIDC,KEY_OIDC_TOKEN_ENDPOINT), data=provider_config, headers=headers, verify = verify)
                 else:
-                    repsonse = requests.post(uri_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
+                    repsonse = requests.post(url_list["token_endpoint"], data=provider_config, headers=headers, verify = verify)
                 response.encoding = 'utf-8'
                 #shall be defined a status_code for each response
                 #edit token dictionary with the response values
