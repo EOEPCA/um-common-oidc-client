@@ -5,10 +5,7 @@ from requests.exceptions import HTTPError
 import unittest
 import mock
 from eoepca_oidc import OpenIDClient
-
-# import os, sys
-# sys.path.append(os.path.abspath('..'))
-# from OpenIDClient import OpenIDClient
+from WellKnownHandler import WellKnownHandler, TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES
 
 def mocked_requests_post(*args, **kwargs):
     class MockResponse:
