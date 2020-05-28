@@ -40,17 +40,19 @@ class OpenIDClient:
         except Exception as err:
             return False
             
-    def _supportedScopes(self, supportedScopes):
+    def _supportedScopes(self):
         '''
         Method that returns error in case the scopes provided by the RP doesn't satisfy the host's supported scopes.
         '''
+        scope_list= self.wkh.get(TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES)
+       
         
         if isinstance(self.scope, str) and 'openid' in self.scope:
             pass
             
         elif 'openid' in self.scope:
             for i in self.scope:
-                if i in supportedScopes:
+                if i in scope_list:
                     continue
                 else:
                     self.scope.remove(i)
@@ -62,8 +64,10 @@ class OpenIDClient:
         The logic implemented on this webpage should retrieve the token from the URL in case the user is not authenticated
         If a token_hint is given the OP should response a succesfully authentication
         '''
+
         try:
             self.getEndpointInformation(issuer, verify)
+            self._supportedScopes()
             if method == 'GET':
                 #Retrieve Code or Login
                 self.getRequestCode(self.token_hint, verify)
@@ -86,9 +90,24 @@ class OpenIDClient:
             <List>scope_list: List of all supported scopes by the host
             <Dict>url_dict: Dictionary with all host endpoints 
         '''
+        url_dict = {}
+        response=requests.get(str(sso_node)+'/.well_known/openid-configuration',verify = verify)
+        response.encoding = 'utf-8'
+        scope_list=[]
+        url_list=[]
+        for k , v in response.json().items():
+            if "scopes_supported" in k:
+                scope_list=v
+            elif "endpoint" in k[-8:]:
+                url_dict[k]=v
+            elif "issuer" in k:
+                url_dict[k]=v
+            else:
+                continue
+        #self._supportedScopes()
+        return url_dict, scope_list
 
-        scope_list= self.wkh.get(TYPE_OIDC, KEY_OIDC_SUPPORTED_SCOPES)
-        self._supportedScopes(scope_list)
+
 
     def getRequestCode(self,url_list=None, token = None, verify=True):
         '''
