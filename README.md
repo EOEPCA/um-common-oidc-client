@@ -1,7 +1,7 @@
 <!--
 ***
 *** To avoid retyping too much info. Do a search and replace for the following:
-*** um-common-oidc-client, PyLibraryTemplate
+*** um-common-oidc-client
 -->
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -19,7 +19,7 @@
   <h3 align="center">EOEPCA-OIDC</h3>
 
   <p align="center">
-    Template for developing an EOEPCA Library
+    Python Library which provides an OIDC client
     <br />
     <a href="https://github.com/EOEPCA/um-common-oidc-client"><strong>Explore the docs</strong></a>
     .
@@ -29,24 +29,8 @@
   </p>
 </p>
 
-## Setup this template!
-- Edit setup.py to fit your repository
-- Replace code and requirements.txt in src by your own! Make sure to use pytest, or replace it in the .travis.yml to use the correct testing suite 
-- Generate a new token in PyPi account exclusively for this library
-
-- setup the following variables (in travis webpage, for this project) to ensure travis automated CI works (https://travis-ci.com/github/EOEPCA/<project>/settings):
-    1. GH_REPOS_NAME (this repo's name)
-    2. GH_USER_NAME (GitHub name for the responsible of this module)
-    3. GH_USER_EMAIL (GitHub email for the responsible of this module)
-    4. TOKEN_PYPI (Token you created in a previous step)
-
-- Un-comment the "notifications" segment in .travis.yml, and input the correct data for slack and/or emails you want to notify
-
-- Edit readme to fit your repository, deleting this part!
-
 ## Table of Contents
 
-- [Setup this template!](#setup-this-template)
 - [Table of Contents](#table-of-contents)
 - [About The Project](#about-the-project)
   - [Built With](#built-with)
@@ -72,7 +56,14 @@
 
 ## Getting Started
 
+This is an OpenID Connect Client implementation of end-user and client authentication
+
+In order to upload into travis the new versions, just commit your work with TAG on it in any branch. 
+This will allow other developers to release patches without merging into master branch.
+
+
 To get a local copy up and running follow these simple steps.
+
 
 ### Prerequisites
 
@@ -86,13 +77,17 @@ This is an example of how to list things you need to use the software and how to
 Just download the library using pip
 
 ```sh
-pip install PyLibraryTemplate
+
+pip install eoepca_oidc
+
 ```
 
 ### Testing
 
 ```sh
-pytest PyLibraryTemplate/tests
+
+pytest eoepca_oidc/tests
+
 ```
 
 ## Documentation & Usage
@@ -119,7 +114,7 @@ Distributed under the Apache-2.0 License. See `LICENSE` for more information.
 
 ## Contact
 
-[EOEPCA mailbox](eoepca.systemteam@telespazio.com)
+EOEPCA mailbox - eoepca.systemteam@telespazio.com
 
 Project Link: [https://github.com/EOEPCA/um-common-oidc-client](https://github.com/EOEPCA/um-common-oidc-client)
 

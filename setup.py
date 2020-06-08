@@ -4,10 +4,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-  name = 'eoepca-oidc',
-  version = '0.0.1',
+  name = 'eoepca_oidc',
+  version = '0.0.2',
   author = 'EOEPCA',
-  author_email = 'angel.lozano@deimos-space.com',
+  author_email = 'alvaro.villanueva@deimos-space.com',
   description = 'Open ID Connect python library developed by the EOEPCA team',
   long_description = long_description,
   long_description_content_type="text/markdown",
